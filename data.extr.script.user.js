@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Data Extractor
 // @namespace    http://tampermonkey.net/
-// @version      0.9
+// @version      0.95
 // @description  Extract data from links and save to Excel
 // @author       Sergei Medintsev
 // @match        *://avito.huntflow.ru/*
