@@ -9,8 +9,6 @@
 // @updateURL    https://github.com/emilia-hr/hf/raw/main/auto.change.stage.script.user.js
 // @downloadURL  https://github.com/emilia-hr/hf/raw/main/auto.change.stage.script.user.js
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/SergMedin/tampermonkey_scripts/main/huntflow/auto_change_status.js
-// @downloadURL    https://raw.githubusercontent.com/SergMedin/tampermonkey_scripts/main/huntflow/auto_change_status.js
 // ==/UserScript==
 
 (function() {
