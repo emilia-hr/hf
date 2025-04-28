@@ -6,6 +6,8 @@
 // @author
 // @match        https://*.huntflow.ru/*
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/emilia-hr/hf/main/auto.change.stage.script.user.js
+// @downloadURL  https://raw.githubusercontent.com/emilia-hr/hf/main/auto.change.stage.script.user.js
 // ==/UserScript==
 
 (function() {
