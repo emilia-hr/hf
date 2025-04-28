@@ -6,6 +6,9 @@
 // @author       Your Name
 // @match        *://*.avito.huntflow.ru/*
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/emilia-hr/hf/main/mass.tagging.script.user.js
+// @downloadURL  https://raw.githubusercontent.com/emilia-hr/hf/main/mass.tagging.script.user.js
+
 // ==/UserScript==
 
 (function() {
