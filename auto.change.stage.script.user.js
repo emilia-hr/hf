@@ -1,46 +1,54 @@
 // ==UserScript==
-// @name         HuntFlow: Auto Change Stage
+// @name         HuntFlow: Auto Change Stage NEW 2.0
 // @namespace    http://tampermonkey.net/
-// @version      1.82
-// @description  Автоматически отказывает по всем пунктам в Huntflow
-// @author       Sergo Medin
-// @match        *://*.sandbox.huntflow.dev/*
-// @match        *://*.avito.huntflow.ru/*
-// @updateURL    https://github.com/emilia-hr/hf/raw/main/auto.change.stage.script.user.js
-// @downloadURL  https://github.com/emilia-hr/hf/raw/main/auto.change.stage.script.user.js
+// @version      2.0
+// @description  Автоматически проставляет отказ по резюме на всех вакансиях
+// @author
+// @match        https://*.huntflow.ru/*
 // @grant        none
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    const REJECTION_LABEL = 'Отказ';
-    const REJECTION_REASON_LABEL = '1. Авито: по резюме';
-    const SAVE_BUTTON_TEXT = 'Сохранить';
+    const parametersList = [
+        {
+            START_BUTTON_LABEL: 'Проставить везде: "по резюме"',
+            START_BUTTON_BACKGROUND_COLOR: '#28a745',
+            REJECTION_LABEL: 'Отказ',
+            REJECTION_REASON_LABEL: '1. Авито: по резюме',
+            SAVE_BUTTON_LABEL: 'Сохранить',
+            BUTTON_PROCESSING_MODE: 'all'
+        },
+        {
+            START_BUTTON_LABEL: 'Проставить везде: "переведен на другую вакансию"',
+            START_BUTTON_BACKGROUND_COLOR: '#28a745',
+            REJECTION_LABEL: 'Отказ',
+            REJECTION_REASON_LABEL: '1.6 Авито: переведен на другую вакансию',
+            SAVE_BUTTON_LABEL: 'Сохранить',
+            BUTTON_PROCESSING_MODE: 'all'
+        }
+    ];
 
-    function createButton() {
-        console.log("HF: Попытка создать кнопку");
-
-        const firstListItem = document.querySelector('li.root--GhuQk');
-        console.log("HF: Найден первый элемент списка:", firstListItem);
-
-        if (firstListItem && !document.querySelector('.btn-change-status')) {
-            const button = document.createElement('button');
-            button.textContent = 'Проставить все статусы';
-            button.style.backgroundColor = '#28a745';
-            button.style.color = '#fff';
-            button.style.border = 'none';
-            button.style.padding = '10px 20px';
-            button.style.marginBottom = '10px';
-            button.style.cursor = 'pointer';
-            button.classList.add('button--Gh4nT', 'button', 'button_green', 'button--ISIoV', 'btn-change-status');
-
-            firstListItem.insertBefore(button, firstListItem.firstChild);
-            console.log("HF: Кнопка создана и добавлена в первый элемент списка как первый дочерний элемент");
-
-            button.addEventListener('click', processAllStages);
-        } else {
-            console.log("HF: Первый элемент списка не найден или кнопка уже существует, кнопка не создана");
+    function createButtons() {
+        const container = document.querySelector('.contentContainer--Udhv_') || document.querySelector('.list--L9UhV');
+        if (container && !document.querySelector('.btn-change-status')) {
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.marginBottom = '10px';
+            parametersList.forEach(params => {
+                const button = document.createElement('button');
+                button.textContent = params.START_BUTTON_LABEL;
+                button.style.backgroundColor = params.START_BUTTON_BACKGROUND_COLOR;
+                button.style.color = '#fff';
+                button.style.margin = '5px';
+                button.style.padding = '8px 12px';
+                button.style.border = 'none';
+                button.style.borderRadius = '4px';
+                button.classList.add('button', 'btn-change-status');
+                button.addEventListener('click', () => processAllStages(params));
+                buttonContainer.appendChild(button);
+            });
+            container.insertBefore(buttonContainer, container.firstChild);
         }
     }
 
@@ -68,11 +76,8 @@
 
     function clickLabelWithText(labelText) {
         const labels = document.querySelectorAll('label.itemName--_nDUF');
-        console.log("HF: Найдены метки с классом 'itemName--_nDUF':", labels);
-
         for (let label of labels) {
             if (label.textContent.includes(labelText)) {
-                console.log("HF: Клик по метке с текстом:", labelText);
                 label.click();
                 return true;
             }
@@ -81,47 +86,73 @@
     }
 
     function clickButtonWithText(buttonText) {
-        const buttons = document.getElementsByClassName('button--Gh4nT');
-        console.log("HF: Найдены кнопки с классом 'button--Gh4nT':", buttons);
-
-        for (let button of buttons) {
-            if (button.textContent.includes(buttonText)) {
-                console.log("HF: Клик по кнопке с текстом:", buttonText);
-                button.click();
-                return true;
-            }
+        const saveButton = document.querySelector('button[data-qa="save"]');
+        if (saveButton && saveButton.querySelector('.content--e4eWR')?.textContent.includes(buttonText)) {
+            saveButton.click();
+            setTimeout(() => {
+                const confirmation = document.querySelector('.confirmation-message');
+                if (confirmation) return true;
+            }, 500);
+            return true;
         }
+        console.warn(`Кнопка с текстом "${buttonText}" не найдена или не содержит ожидаемого текста.`);
         return false;
     }
 
-    function processAllStages() {
-        console.log("HF: Начало обработки всех этапов");
+    async function findAndInputStatus(status) {
+        return new Promise(resolve => {
+            const searchInput = document.querySelector('input[type="search"][placeholder="Поиск..."]');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.value = status;
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                setTimeout(() => {
+                    const reasonItem = Array.from(document.querySelectorAll('span'))
+                        .find(span => span.textContent.trim() === status);
+                    if (reasonItem) {
+                        reasonItem.click();
+                        resolve(true);
+                    } else {
+                        console.warn(`Причина "${status}" не найдена.`);
+                        resolve(false);
+                    }
+                }, 500);
+            } else {
+                console.warn('Поле поиска причины не найдено.');
+                resolve(false);
+            }
+        });
+    }
 
+    async function processAllStages(params) {
         const changeStageButtons = document.querySelectorAll('button[data-qa="change_status_button"]');
-        console.log("HF: Найдены кнопки смены этапа:", changeStageButtons);
-
+        let buttonsToProcess = Array.from(changeStageButtons);
         let index = 0;
 
-        function processNextButton() {
-            if (index < changeStageButtons.length) {
-                console.log("HF: Обработка кнопки по индексу:", index);
-                changeStageButtons[index].click();
+        async function processNextButton() {
+            if (index < buttonsToProcess.length) {
+                buttonsToProcess[index].click();
+                await new Promise(resolve => setTimeout(resolve, 500));
 
-                setTimeout(() => {
-                    if (clickLabelWithText(REJECTION_LABEL)) {
+                if (clickLabelWithText(params.REJECTION_LABEL)) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const statusInputSuccess = await findAndInputStatus(params.REJECTION_REASON_LABEL);
+                    if (statusInputSuccess) {
                         setTimeout(() => {
-                            if (clickLabelWithText(REJECTION_REASON_LABEL)) {
-                                setTimeout(() => {
-                                    if (clickButtonWithText(SAVE_BUTTON_TEXT)) {
-                                        index++;
-                                        console.log("HF: Переход к следующей кнопке");
-                                        setTimeout(processNextButton, 999); // ждем завершения действия сохранения
-                                    }
-                                }, 10);
+                            if (clickButtonWithText(params.SAVE_BUTTON_LABEL)) {
+                                index++;
+                                setTimeout(processNextButton, 1000);
+                            } else {
+                                console.warn('Не удалось нажать кнопку "Сохранить", продолжаем с следующей вакансией.');
+                                index++;
+                                setTimeout(processNextButton, 1000);
                             }
-                        }, 10);
+                        }, 500);
+                    } else {
+                        index++;
+                        setTimeout(processNextButton, 1000);
                     }
-                }, 10);
+                }
             } else {
                 showCompletionBanner();
             }
@@ -130,19 +161,13 @@
         processNextButton();
     }
 
-    const observer = new MutationObserver((mutations) => {
-        for (let mutation of mutations) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                console.log("HF: Обнаружены изменения в DOM");
-                createButton();
-            }
-        }
+    const observer = new MutationObserver(() => {
+        createButtons();
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
 
     window.addEventListener('load', () => {
-        console.log("HF: Страница загружена, ждем перед попыткой создания кнопки");
-        setTimeout(createButton, 3000);
+        setTimeout(createButtons, 500);
     });
 })();
