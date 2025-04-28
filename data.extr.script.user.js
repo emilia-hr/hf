@@ -5,8 +5,8 @@
 // @description  Extract data from links and save to Excel
 // @author
 // @match        *://avito.huntflow.ru/*
-// @updateURL    https://github.com/emilia-hr/hf/raw/main/data.extr.script.user.js
-// @downloadURL  https://github.com/emilia-hr/hf/raw/main/data.extr.script.user.js
+// @updateURL    https://raw.githubusercontent.com/emilia-hr/hf/main/data.extr.script.user.js
+// @downloadURL  https://raw.githubusercontent.com/emilia-hr/hf/main/data.extr.script.user.js
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
